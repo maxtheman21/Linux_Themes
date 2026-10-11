@@ -1,41 +1,71 @@
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Io
+
 import QtQuick
 import QtQuick.Controls
+import QtQml.Models
 
 PanelWindow{
 
         id: launcher
 
+        focusable: true
         visible: false
         implicitWidth: screen ? screen.width / 3.5 : 200
         implicitHeight: screen ? screen.height / 1.75 : 100
 
+        property var filteredApps: []
+        property string imgPath: `file:///home/${Quickshell.env("USER")}/.themes/persona5/images/`
+
         Image {
             id: mainWallpaper
             anchors.fill: parent
-            source: `file:///home/${Quickshell.env("USER")}/.themes/persona5/wallpaper/app_launcher_background.mp4`
+            source: imgPath+`app_launcher_background.png`
             smooth: true
 
         }
 
-        // radius: 12
-        // antialiasing: true
-        
-        // border.color: "black"
-        // border.width: 2
-        // border.pixelAligned: true
+        color: "transparent"
 
+        property var appCache: {
+            let apps = [];
+            let keys = Object.keys(DesktopEntries.applications.values);
+            console.log(Object.keys(DesktopEntries.applications.values[0]))
+            for(let i = 0; i < keys.length; i++){
+                let app = DesktopEntries.applications.values[keys[i]];
+                console.log(app.icon)
+                apps.push({
+                    "name" : app.name || "",
+                    "description" : app.genericName || "",
+                    "icon" : app.icon || "",
+                    "entry" : app
+                });
+            }
+            return apps
+        }
 
-        color: "red"
+        onAppCacheChanged: updateModel(search.text)
 
-        // TextField {
-        //     id: search
-        //     implicitWidth: screen ? screen.width / 4: 150
-        //     placeholderText: "Search..."
-        //     OnTextChanged: {}
-        // }
+        function updateModel(searchQuery){
+            let query = searchQuery.toLowerCase().trim();
+            
+            let results = appCache.filter(app => {
+                if (query === "") return true;
+                return app.name.toLowerCase().includes(query);
+            });
+
+            results.sort((a, b) => a.name.localeCompare(b.name));
+            filteredApps = results;
+        }
+
+        TextField {
+            id: search
+            placeholderText: "Search apps..."
+            onTextChanged: launcher.updateModel(text)
+            implicitWidth: launcher.implicitWidth
+            focus: true
+        }
 
         ListView {
             id: view
@@ -47,46 +77,61 @@ PanelWindow{
 
             anchors.centerIn: parent
 
-            model: DesktopEntries.applications
+            model: launcher.filteredApps
             delegate: Rectangle {
-                // property bool matchesSearch: model.name.toLowerCase().includes(searchInput.text.toLowerCase())
-                // id: wrapper
-
-                // visble: matchesSearch
 
                 height: screen ? screen.height / 15 : 50
                 width: screen ? screen.width / 4: 150
 
-                color: ListView.isCurrentItem ? "black" : "red"
+                property bool isCurrent: (view.currentIndex === index)
 
+                color: "transparent"
 
-                radius: 12
-                antialiasing: true
-
-                border.color: "black"
-                border.width: 2
-                border.pixelAligned: true
-
-                // Image { source: "/usr/share/icons/hicolor/256x256/apps/"+modelData.icon+".png" } // I cannot find the icon path for .desktop
-
-                Column {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    anchors.top: parent.top
-                    anchors.topMargin: 5
-                    spacing: 2
-
-                    Text { 
-                        text: modelData.name
-                        font.pointSize: 16
-                        color: "#ffffff"
-                    } // Main Name
-                    Text { 
-                        text: modelData.genericName
-                        font.pointSize: 10  
-                        color: "#ffffff"
-                    } // General Purpose
+                Image{
+                    id: applicationBackground
+                    anchors.centerIn: parent
+                    source: isCurrent ? imgPath+`applicationBackgroundActive` : imgPath+`applicationBackground`
+                    height: screen ? screen.height / 12 : 50
+                    width: screen ? screen.width / 4: 150
+                    // anchors.verticalCenterOffset: -20
                 }
+
+
+                Row{
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    anchors.top: parent.top
+                    anchors.topMargin: 18
+                    spacing: 10
+
+                    IconImage { 
+                        source: modelData.icon ? "image://icon/" + modelData.icon : "image://icon/application-x-executable"
+                        width: 32
+                        height: 32
+
+                        transform: Translate {
+                            y: 12
+                        }
+
+                    } 
+
+                    Column {
+                    spacing: 1
+
+                        Text { 
+                            text: modelData.name
+                            font.pointSize: 16
+                            color: "#ffffff"
+                        } // Main Name
+                        Text { 
+                            text: modelData.description
+                            font.pointSize: 10  
+                            color: "#ffffff"
+                        } // General Purpose
+                    }
+                }
+
+                
 
                 MouseArea {
                     hoverEnabled: true
@@ -97,19 +142,22 @@ PanelWindow{
                     }
 
                     onClicked: {
-                        launcher.visible = false
-                        modelData.execute()
+                        modelData.entry.execute()
+                        ipc.toggleVisible()
                     }
                 }
             }
-            focus: true
         }
     
     IpcHandler {
         target: "launcher"
+        id: ipc
 
         function toggleVisible(): void {
             launcher.visible = !launcher.visible
+            search.text = ""
+            view.positionViewAtBeginning()
+            launcher.focus = true
         }
     }
     
