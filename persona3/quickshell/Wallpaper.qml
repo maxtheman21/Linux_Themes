@@ -5,6 +5,10 @@ import Quickshell.Wayland
 
 
 ShellRoot {
+
+    property string imgPath: `file:///home/${Quickshell.env("USER")}/.themes/persona3/images/`
+
+
 	Variants {
 		id: defaultWallpaper
 		model: Quickshell.screens
@@ -23,7 +27,7 @@ ShellRoot {
 			Image {
 				id: secondaryWallpaper
 				anchors.fill: parent
-				source: `file:///home/${Quickshell.env("USER")}/.themes/persona3/wallpaper/default.jpg`
+				source: imgPath+`default.jpg`
 				smooth: true
 
 			}
@@ -55,7 +59,7 @@ ShellRoot {
 				Image {
 					id: secondaryScreensaver
 					anchors.fill: parent
-					source: `file:///home/${Quickshell.env("USER")}/.themes/persona3/wallpaper/screensaver.jpg`
+					source: imgPath`screensaver.jpg`
 					smooth: true
 
 				}
@@ -76,7 +80,7 @@ ShellRoot {
 	
 		MediaPlayer {
 			id: intro
-			source: `file:///home/${Quickshell.env("USER")}/.themes/persona3/wallpaper/Intro_P3.mp4`
+			source: imgPath+`Intro_P3.mp4`
 			autoPlay: true
 			videoOutput: videoIntro
 			
@@ -96,7 +100,7 @@ ShellRoot {
 
 		MediaPlayer {
 			id: loop
-			source: `file:///home/${Quickshell.env("USER")}/.themes/persona3/wallpaper/Loop_P3.mp4`
+			source: imgPath+`Loop_P3.mp4`
 			videoOutput: videoLoop
 			loops: MediaPlayer.Infinite
 		}
@@ -133,3 +137,4 @@ ShellRoot {
 		}
 	}
 }
+

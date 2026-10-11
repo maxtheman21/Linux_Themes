@@ -6,7 +6,7 @@ import Quickshell.Wayland
 
 ShellRoot {
 
-
+    property string imgPath: `file:///home/${Quickshell.env("USER")}/.themes/persona3/images/`
 
 	Variants {
 		
@@ -28,7 +28,7 @@ ShellRoot {
 			Image {
 				id: mainWallpaper
 				anchors.fill: parent
-				source: `file:///home/${Quickshell.env("USER")}/.themes/persona5/wallpaper/default.jpg`
+				source: imgPath+`default.jpg`
 				smooth: true
 
 			}
@@ -61,7 +61,7 @@ ShellRoot {
 				Image {
 					id: secondaryScreensaver
 					anchors.fill: parent
-					source: `file:///home/${Quickshell.env("USER")}/.themes/persona5/wallpaper/screensaver.png`
+					source: imgPath+`screensaver.png`
 					smooth: true
 
 				}
@@ -108,7 +108,7 @@ ShellRoot {
 
 		MediaPlayer {
 			id: loop
-			source: `file:///home/${Quickshell.env("USER")}/.themes/persona5/wallpaper/main.jpg`
+			source: imgPath+`main.jpg`
 			videoOutput: videoLoop
 			autoPlay: true
 			loops: MediaPlayer.Infinite
