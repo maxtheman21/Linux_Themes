@@ -3,10 +3,18 @@ import QtQuick
 import QtMultimedia
 import Quickshell.Wayland
 
+// TODO
+//
+// Change Screensaver?
 
 ShellRoot {
 
     property string imgPath: `file:///home/${Quickshell.env("USER")}/.themes/persona3/images/`
+
+	QtObject {
+		signal globalTrigger()
+	}
+
 
 
 	Variants {
@@ -35,7 +43,17 @@ ShellRoot {
 	}
 	Item{
 		id: screensaver
-		property bool screensaverVisible: false
+		property real screensaverVisible: 0
+
+		NumberAnimation {
+			id: transitionOpacity
+			target: screensaver
+			property: "screensaverVisible"
+			duration: 5000
+			easing.type: Easing.InOutQuad
+			from: 0.0
+			to: 1.0
+		}
 
 		Variants {
 			id: defaultScreensaver
@@ -46,7 +64,11 @@ ShellRoot {
 				property var modelData
 				screen: modelData
 
-				visible: screensaver.screensaverVisible
+				mask: Region {
+					// item: options
+				}
+
+				color: "transparent"
 
 				WlrLayershell.layer: WlrLayer.Overlay
 				anchors {
@@ -57,12 +79,15 @@ ShellRoot {
 				}
 
 				Image {
+					opacity: screensaver.screensaverVisible
 					id: secondaryScreensaver
 					anchors.fill: parent
-					source: imgPath`screensaver.jpg`
+					source: imgPath+`screensaver.png`
 					smooth: true
 
+					
 				}
+
 			}
 		}
 	}
@@ -77,7 +102,24 @@ ShellRoot {
 			bottom: true
 			top: true			
 		}
-	
+		
+		Item{
+			Dropdown {
+				id: dropdownRoot
+				onButtonClicked: {
+					calandarRoot.toggleVisible()
+					dropdownRoot.toggleVisible()
+				}
+			}
+			Calandar {
+				id: calandarRoot
+				onButtonClicked: {
+					calandarRoot.toggleVisible()
+					dropdownRoot.toggleVisible()
+				}
+			}
+		}
+
 		MediaPlayer {
 			id: intro
 			source: imgPath+`Intro_P3.mp4`
@@ -120,21 +162,15 @@ ShellRoot {
 	IdleMonitor {
 		id: idle
 		timeout: 300
-		respectInhibitors: false
+
 		onIsIdleChanged: {
-			if (isIdle) {
-				screensaver.screensaverVisible = true
-				// idle monitor, a panel window that is displayed in front of everything
+			if(isIdle){
+				transitionOpacity.restart()
 			}
-			else { // would only trigger after IsIdle is changed to false, or user "wakes" the computer up
-				// if (LockScreenEnabled) {
-				// 	// goto lockscreen
-				// }
-				// else{
-					screensaver.screensaverVisible = false
-				// }
+			else{
+				transitionOpacity.pause()
+				screensaver.screensaverVisible = 0
 			}
 		}
 	}
 }
-
